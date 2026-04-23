@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <!-- Gradient circle background -->
+  <defs>
+    <linearGradient id="grad" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#1E40AF"/>
+    </linearGradient>
+  </defs>
+  <circle cx="60" cy="60" r="56" fill="url(#grad)"/>
+  <!-- Inner "O" ring (the "Opto" reference) -->
+  <circle cx="60" cy="56" r="28" stroke="#FFFFFF" stroke-width="8" fill="none"/>
+  <!-- The "p" shape / location pin notch at bottom -->
+  <path d="M60 84 L60 104" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
+  <!-- Arrow / pick indicator pointing into the O -->
+  <path d="M48 56 L58 56 L54 48 L68 56 L54 64 L58 56" fill="#FFFFFF"/>
+</svg>

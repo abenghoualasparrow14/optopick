@@ -1,0 +1,18 @@
+# Python
+backend/.vvenv/
+backend/__pycache__/
+backend/*.db
+backend/*.xlsx
+backend/*.csv
+
+# Node (Frontend)
+**/node_modules/
+**/dist/
+**/.env
+**/.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.log
