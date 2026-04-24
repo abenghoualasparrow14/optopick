@@ -6,6 +6,25 @@ from routers import auth, warehouses, upload, heatmap, slotting, routing, access
 # Créer toutes les tables au démarrage
 Base.metadata.create_all(bind=engine)
 
+def init_db():
+    from database import SessionLocal
+    from models import Company
+    from services.auth import hash_password
+    db = SessionLocal()
+    # Si la base de données est complètement vide (1er démarrage)
+    if not db.query(Company).first():
+        admin = Company(
+            name="OptoPick Admin",
+            email="admin@optopick.dz",
+            password=hash_password("admin123"),
+            is_admin=True
+        )
+        db.add(admin)
+        db.commit()
+    db.close()
+
+init_db()
+
 
 
 app = FastAPI(
