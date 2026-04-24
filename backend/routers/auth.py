@@ -13,22 +13,6 @@ import json
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
-@router.post("/setup")
-def setup_first_admin(db: Session = Depends(get_db)):
-    """Crée le premier compte administrateur si la base est vide."""
-    if db.query(Company).first():
-        raise HTTPException(status_code=400, detail="Database already initialized.")
-    from services.auth import hash_password
-    admin = Company(
-        name="OptoPick Admin",
-        email="admin@optopick.dz",
-        password=hash_password("admin123"),
-        is_admin=True
-    )
-    db.add(admin)
-    db.commit()
-    db.refresh(admin)
-    return {"message": "Compte admin@optopick.dz créé avec le mot de passe admin123."}
 
 @router.post("/login", response_model=schemas.Token)
 def login(data: schemas.CompanyLogin, db: Session = Depends(get_db)):

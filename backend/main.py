@@ -6,6 +6,8 @@ from routers import auth, warehouses, upload, heatmap, slotting, routing, access
 # Créer toutes les tables au démarrage
 Base.metadata.create_all(bind=engine)
 
+
+
 app = FastAPI(
     title="OptoPick API",
     description="Warehouse Intelligence Platform — Optimisation de picking",

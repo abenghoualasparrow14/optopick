@@ -3,12 +3,18 @@ from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 # SQLite pour le MVP — remplacer par PostgreSQL en production
 # ex: "postgresql://user:password@localhost/optopick"
-DATABASE_URL = "sqlite:///./optopick.db"
+import os
 
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False}  # SQLite uniquement
-)
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./optopick.db")
+
+# PostgreSQL URL from Neon or Supabase sometimes starts with 'postgres://', SQLAlchemy needs 'postgresql://'
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+# Only add check_same_thread for SQLite
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

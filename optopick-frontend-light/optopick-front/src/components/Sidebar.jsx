@@ -42,7 +42,7 @@ export default function Sidebar() {
         )}
       </div>
 
-      <div style={{ flex:1, padding:'16px 12px', display:'flex', flexDirection:'column', gap:4 }}>
+      <div style={{ flex:1, overflowY:'auto', padding:'16px 12px', display:'flex', flexDirection:'column', gap:4 }}>
         <div style={{ fontSize:10, color:S.dimmer, fontWeight:600,
           padding:'0 10px', marginBottom:8, textTransform:'uppercase', letterSpacing:'0.05em' }}>MODULES</div>
         {visibleNav.map(n => {
