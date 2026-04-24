@@ -160,7 +160,7 @@ def list_articles(
         func.count(Pick.id).label("picks"),
     ).filter(
         Pick.warehouse_id == warehouse_id
-    ).group_by(Pick.article_id, Pick.rack).all()
+    ).group_by(Pick.article_id, Pick.article_name, Pick.rack).all()
 
     # Regrouper par article_id — prendre le rack avec le plus de picks
     article_map = {}
