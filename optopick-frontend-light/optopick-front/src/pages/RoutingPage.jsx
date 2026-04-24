@@ -339,8 +339,6 @@ export default function RoutingPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                   {[
                     { icon: <Move size={18} color="#16A34A" />, l: 'Distance optimisée', v: `${result.total_distance_m} m`, c: '#16A34A', bg: '#F0FDF4' },
-                    { icon: <Target size={18} color="#16A34A" />, l: 'Gain vs ordre aléatoire', v: `${result.gain_pct}%`, c: '#16A34A', bg: '#F0FDF4' },
-                    { icon: <TrendingDown size={18} color="#DC2626" />, l: 'Distance sans optimisation', v: `${result.naive_distance_m} m`, c: '#DC2626', bg: '#FEF2F2' },
                     { icon: <MapPin size={18} color="#1E40AF" />, l: 'Emplacements visités', v: result.tours?.reduce((acc, t) => acc + t.path.length, 0) || 0, c: '#1E40AF', bg: '#EFF6FF' },
                   ].map((k, i) => (
                     <div key={i} style={{ padding: '12px', borderRadius: 9, background: k.bg, border: `1px solid ${k.c}22` }}>
