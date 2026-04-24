@@ -4,7 +4,7 @@ import { S } from '../components/styles'
 import { Loading, ErrorBox } from '../components/Widgets'
 import { Settings, FileText, UserPlus, Mail, Phone, Globe, CheckCircle, XCircle, Building, Key, Boxes, AlertTriangle, Loader2, Rocket } from 'lucide-react'
 
-const BASE = '/api'
+const BASE = import.meta.env.VITE_API_URL || '/api'
 const tok  = () => localStorage.getItem('op_token')
 
 async function adminReq(method, path, body=null) {
