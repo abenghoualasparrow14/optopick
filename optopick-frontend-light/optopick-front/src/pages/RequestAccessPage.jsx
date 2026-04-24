@@ -131,7 +131,7 @@ export default function RequestAccessPage() {
             <Building size={14} /> INFORMATIONS ENTREPRISE
           </div>
 
-          {inp("Nom de l'entreprise", "company_name", "Ex: Numilog Algérie")}
+          {inp("Nom de l'entreprise", "company_name", "")}
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
             <div>

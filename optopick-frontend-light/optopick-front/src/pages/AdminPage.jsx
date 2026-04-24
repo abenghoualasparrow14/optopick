@@ -408,7 +408,7 @@ function CreateAccountPanel() {
               Nom <span style={{ color:S.red }}>*</span>
             </label>
             <input value={form.company_name} onChange={e => set('company_name', e.target.value)}
-              placeholder="Numilog Algérie" style={inputStyle}
+              placeholder="" style={inputStyle}
               onFocus={e => e.target.style.borderColor=S.blue}
               onBlur={e  => e.target.style.borderColor=S.divider}/>
           </div>
