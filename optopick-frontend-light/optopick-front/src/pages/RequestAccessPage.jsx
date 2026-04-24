@@ -135,14 +135,14 @@ export default function RequestAccessPage() {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
             <div>
-              {inp("Téléphone contact", "phone", '+213 6XX XXX XXX')}
+              {inp("Téléphone contact", "phone", '')}
             </div>
             <div>
-              {inp("Téléphone entreprise", "company_phone", '+213 2X XXX XXXX', 'tel', false)}
+              {inp("Téléphone entreprise", "company_phone", '', 'tel', false)}
             </div>
           </div>
 
-          {inp("Site web", 'website', 'https://www.entreprise.dz', 'url', false,
+          {inp("Site web", 'website', '', 'url', false,
             "Optionnel — si votre entreprise en possède un")}
 
           {/* Section contact */}
@@ -152,7 +152,7 @@ export default function RequestAccessPage() {
             <User size={14} /> CONTACT RESPONSABLE
           </div>
 
-          {inp("Email professionnel", 'email', 'responsable@entreprise.dz', 'email')}
+          {inp("Email professionnel", 'email', '', 'email')}
 
           {/* Message optionnel */}
           <div style={{ marginBottom: 20 }}>
@@ -163,7 +163,7 @@ export default function RequestAccessPage() {
             <textarea
               value={form.message}
               onChange={e => set('message', e.target.value)}
-              placeholder="Décrivez brièvement votre entrepôt, vos besoins..."
+              placeholder=""
               rows={3}
               style={{
                 width: '100%', padding: '11px 14px', borderRadius: 9, resize: 'vertical',

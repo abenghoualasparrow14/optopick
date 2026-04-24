@@ -351,7 +351,7 @@ function FormSection() {
                 Téléphone contact <span style={{ color: C.red }}>*</span>
               </label>
               <input value={form.phone} onChange={e => set('phone', e.target.value)}
-                placeholder="+213 6XX XXX XXX" style={inputStyle}
+                placeholder="" style={inputStyle}
                 onFocus={e => e.target.style.borderColor = C.blue}
                 onBlur={e => e.target.style.borderColor = C.divider} />
             </div>
@@ -360,7 +360,7 @@ function FormSection() {
                 Téléphone entreprise
               </label>
               <input value={form.company_phone} onChange={e => set('company_phone', e.target.value)}
-                placeholder="+213 2X XXX XXXX" style={inputStyle}
+                placeholder="" style={inputStyle}
                 onFocus={e => e.target.style.borderColor = C.blue}
                 onBlur={e => e.target.style.borderColor = C.divider} />
             </div>
@@ -371,7 +371,7 @@ function FormSection() {
               Site web <span style={{ fontSize: 10, fontWeight: 400 }}>(optionnel)</span>
             </label>
             <input value={form.website} onChange={e => set('website', e.target.value)}
-              placeholder="https://www.entreprise.dz" style={inputStyle}
+              placeholder="" style={inputStyle}
               onFocus={e => e.target.style.borderColor = C.blue}
               onBlur={e => e.target.style.borderColor = C.divider} />
           </div>
@@ -388,7 +388,7 @@ function FormSection() {
               Email professionnel <span style={{ color: C.red }}>*</span>
             </label>
             <input type="email" value={form.email} onChange={e => set('email', e.target.value)}
-              placeholder="responsable@entreprise.dz" style={inputStyle}
+              placeholder="" style={inputStyle}
               onFocus={e => e.target.style.borderColor = C.blue}
               onBlur={e => e.target.style.borderColor = C.divider} />
           </div>
@@ -398,7 +398,7 @@ function FormSection() {
               Message <span style={{ fontSize: 10, fontWeight: 400 }}>(optionnel)</span>
             </label>
             <textarea value={form.message} onChange={e => set('message', e.target.value)}
-              placeholder="Décrivez brièvement votre entrepôt, vos besoins..."
+              placeholder=""
               rows={3}
               style={{ ...inputStyle, resize: 'vertical' }}
               onFocus={e => e.target.style.borderColor = C.blue}
