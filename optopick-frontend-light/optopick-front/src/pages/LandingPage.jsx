@@ -340,7 +340,7 @@ function FormSection() {
               Nom de l'entreprise <span style={{ color: C.red }}>*</span>
             </label>
             <input value={form.company_name} onChange={e => set('company_name', e.target.value)}
-              placeholder="Ex: Numilog Algérie" style={inputStyle}
+              placeholder="" style={inputStyle}
               onFocus={e => e.target.style.borderColor = C.blue}
               onBlur={e => e.target.style.borderColor = C.divider} />
           </div>
