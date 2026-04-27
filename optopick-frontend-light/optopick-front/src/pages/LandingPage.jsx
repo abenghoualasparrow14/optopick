@@ -86,7 +86,7 @@ function Hero() {
           background:'#EFF6FF', border:'1px solid #BFDBFE', marginBottom:20,
           fontSize:12, fontWeight:600, color:C.blue, letterSpacing:'0.02em',
         }}>
-          🚀 Warehouse Intelligence Platform
+          Warehouse Intelligence Platform
         </div>
         <h1 style={{
           fontSize: 48, fontWeight: 900, color: C.dark,
@@ -420,7 +420,7 @@ function FormSection() {
             cursor: loading ? 'not-allowed' : 'pointer', fontFamily: C.font,
             transition: 'all 0.2s', boxShadow: loading ? 'none' : '0 4px 16px rgba(30,64,175,0.3)',
           }}>
-            {loading ? '⏳ Envoi en cours...' : '🚀 Envoyer la demande'}
+            {loading ? '⏳ Envoi en cours...' : 'Envoyer la demande'}
           </button>
 
           <div style={{ textAlign: 'center', marginTop: 14, fontSize: 12, color: C.dimmer }}>
