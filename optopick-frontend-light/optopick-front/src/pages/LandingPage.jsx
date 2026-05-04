@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Map as MapIcon, Boxes, Route, UploadCloud, FileText, Settings, Rocket, CheckCircle, Mail, Building, User } from 'lucide-react'
+import { Map as MapIcon, Boxes, Route, UploadCloud, FileText, Settings, Rocket, CheckCircle, Mail, Building, User, ChevronUp } from 'lucide-react'
 
 const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -29,6 +29,7 @@ export default function LandingPage() {
       <HowItWorks />
       <FormSection />
       <Footer />
+      <ScrollToTop />
     </div>
   )
 }
@@ -453,5 +454,37 @@ function Footer() {
       </div>
 
     </footer>
+  )
+}
+
+/* ───────── Scroll To Top ───────── */
+function ScrollToTop() {
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY > 300)
+    window.addEventListener('scroll', onScroll)
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  return (
+    <button
+      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      aria-label="Retour en haut"
+      style={{
+        position: 'fixed', bottom: 28, right: 28, zIndex: 99,
+        width: 44, height: 44, borderRadius: '50%', border: 'none',
+        background: 'linear-gradient(135deg,#1E40AF,#3B82F6)',
+        color: '#fff', cursor: 'pointer',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        boxShadow: '0 4px 16px rgba(30,64,175,0.35)',
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateY(0)' : 'translateY(20px)',
+        pointerEvents: visible ? 'auto' : 'none',
+        transition: 'opacity 0.3s ease, transform 0.3s ease',
+      }}
+    >
+      <ChevronUp size={22} strokeWidth={2.5} />
+    </button>
   )
 }
