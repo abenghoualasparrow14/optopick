@@ -61,7 +61,9 @@ export default function SlottingPage() {
       </div>
 
       {loading && <Loading text='Calcul de la classification ABC...' />}
-      {error   && <ErrorBox message={error} />}
+      {error && error.toLowerCase().includes('aucune donn')
+        ? <EmptyState icon={<Boxes size={48} color={S.dimmer} strokeWidth={1.5} />} text='Aucune donnée importée pour cet entrepôt' sub="Importez vos données via le module Import pour commencer l'analyse." />
+        : error && <ErrorBox message={error} />}
       {!loading && !data && !error && <EmptyState icon={<Boxes size={48} color={S.dimmer} strokeWidth={1.5} />} text='Sélectionnez un entrepôt' />}
 
       {data && (

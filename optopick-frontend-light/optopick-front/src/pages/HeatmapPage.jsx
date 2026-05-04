@@ -250,7 +250,9 @@ export default function HeatmapPage() {
       </div>
 
       {loading && <Loading text='Calcul de la heatmap...' />}
-      {error   && <ErrorBox message={error} />}
+      {error && error.toLowerCase().includes('aucune donn')
+        ? <EmptyState icon={<Map size={48} strokeWidth={1.5} color={S.dimmer} />} text='Aucune donnée importée pour cet entrepôt' sub="Importez vos données via le module Import pour commencer l'analyse." />
+        : error && <ErrorBox message={error} />}
       {!loading && !data && !error && <EmptyState icon={<Map size={48} strokeWidth={1.5} color={S.dimmer} />} text='Sélectionnez un entrepôt' sub='La heatmap apparaîtra ici' />}
 
       {data && (

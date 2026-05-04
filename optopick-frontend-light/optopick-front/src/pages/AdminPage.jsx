@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { api } from '../api/client'
 import { S } from '../components/styles'
-import { Loading, ErrorBox } from '../components/Widgets'
+import { Loading, ErrorBox, EmptyState } from '../components/Widgets'
 import { Settings, FileText, UserPlus, Mail, Phone, Globe, CheckCircle, XCircle, Building, Key, Boxes, AlertTriangle, Loader2, Rocket } from 'lucide-react'
 
 const BASE = import.meta.env.VITE_API_URL || '/api'
@@ -130,7 +130,9 @@ function RequestsPanel() {
       </div>
 
       {loading && <Loading text='Chargement des demandes...' />}
-      {error   && <ErrorBox message={error} />}
+      {error && (error.toLowerCase().includes('aucun') || error.toLowerCase().includes('not found') || error.toLowerCase().includes('404'))
+        ? <EmptyState text='Aucune demande pour le moment' sub="Les demandes d'accès apparaîtront ici." />
+        : error && <ErrorBox message={error} />}
 
       {!loading && filtered.length === 0 && (
         <div style={{ textAlign:'center', padding:'48px', color:S.dimmer, fontSize:12 }}>
