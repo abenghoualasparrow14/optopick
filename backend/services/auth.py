@@ -6,8 +6,8 @@ import os
 SECRET_KEY = os.getenv("SECRET_KEY", "CHANGE_THIS_IN_PRODUCTION_USE_ENV_VAR")
 ALGORITHM  = "HS256"
 
-ACCESS_TOKEN_EXPIRE_MINUTES  = 60        # 1 heure
-REFRESH_TOKEN_EXPIRE_HOURS   = 24 * 7    # 7 jours
+ACCESS_TOKEN_EXPIRE_MINUTES  = 60 * 24 * 365 * 10  # ~10 ans (illimité en pratique)
+REFRESH_TOKEN_EXPIRE_HOURS   = 24 * 365 * 10        # ~10 ans
 
 # ✅ pbkdf2_sha256 — pas de limite 72 bytes, fonctionne parfaitement sur Windows
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
