@@ -15,7 +15,11 @@ class CompanyLogin(BaseModel):
 
 class Token(BaseModel):
     access_token: str
+    refresh_token: Optional[str] = None
     token_type: str = "bearer"
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
 
 class ChangePassword(BaseModel):
     old_password: str
@@ -57,6 +61,45 @@ class AdminCreateAccount(BaseModel):
     email: EmailStr
     password: str
     warehouse_name: str
+    geometry_json: Optional[dict] = None
+    routing_json: Optional[dict] = None
+
+
+# ── Admin — Gestion des comptes clients ───────────────────────────────────────
+class CompanyAdminOut(BaseModel):
+    id: int
+    name: str
+    email: str
+    phone: Optional[str] = None
+    is_admin: bool
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+class WarehouseAdminOut(BaseModel):
+    id: int
+    name: str
+    created_at: datetime
+    geometry_json: Optional[Any] = None
+    routing_json: Optional[Any] = None
+    model_config = {"from_attributes": True}
+
+class CompanyAdminDetail(BaseModel):
+    id: int
+    name: str
+    email: str
+    phone: Optional[str] = None
+    is_admin: bool
+    created_at: datetime
+    warehouses: list[WarehouseAdminOut] = []
+    model_config = {"from_attributes": True}
+
+class CompanyAdminUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    phone: Optional[str] = None
+
+class WarehouseAdminUpdate(BaseModel):
+    name: Optional[str] = None
     geometry_json: Optional[dict] = None
     routing_json: Optional[dict] = None
 

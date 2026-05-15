@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { api } from '../api/client'
 import { S } from '../components/styles'
 import { Loading, ErrorBox, EmptyState } from '../components/Widgets'
-import { Settings, FileText, UserPlus, Mail, Phone, Globe, CheckCircle, XCircle, Building, Key, Boxes, AlertTriangle, Loader2, Rocket } from 'lucide-react'
+import { Settings, FileText, UserPlus, Mail, Phone, Globe, CheckCircle, XCircle, Building, Key, Boxes, AlertTriangle, Loader2, Rocket, Users, ChevronDown, ChevronUp, Edit2, RefreshCw, Save, X } from 'lucide-react'
 
 const BASE = import.meta.env.VITE_API_URL || '/api'
 const tok  = () => localStorage.getItem('op_token')
@@ -28,7 +28,7 @@ const STATUS_CONFIG = {
 }
 
 export default function AdminPage() {
-  const [tab, setTab] = useState('requests')   // 'requests' | 'create'
+  const [tab, setTab] = useState('requests')   // 'requests' | 'create' | 'companies'
 
   const tabBtn = (k, label, icon) => ({
     padding:'9px 20px', borderRadius:8, border:`1.5px solid ${tab===k ? S.blue : S.divider}`,
@@ -52,12 +52,14 @@ export default function AdminPage() {
 
       {/* Tabs */}
       <div style={{ display:'flex', gap:8, marginBottom:20 }}>
-        <button onClick={()=>setTab('requests')} style={{...tabBtn('requests'), display:'flex', alignItems:'center', gap:6}}><FileText size={14} /> Demandes d'accès</button>
-        <button onClick={()=>setTab('create')}   style={{...tabBtn('create'), display:'flex', alignItems:'center', gap:6}}><UserPlus size={14} /> Créer un compte client</button>
+        <button onClick={()=>setTab('requests')}  style={{...tabBtn('requests'),  display:'flex', alignItems:'center', gap:6}}><FileText size={14} /> Demandes d'accès</button>
+        <button onClick={()=>setTab('create')}    style={{...tabBtn('create'),    display:'flex', alignItems:'center', gap:6}}><UserPlus size={14} /> Créer un compte client</button>
+        <button onClick={()=>setTab('companies')} style={{...tabBtn('companies'), display:'flex', alignItems:'center', gap:6}}><Users size={14} /> Comptes clients</button>
       </div>
 
-      {tab === 'requests' && <RequestsPanel />}
-      {tab === 'create'   && <CreateAccountPanel />}
+      {tab === 'requests'  && <RequestsPanel />}
+      {tab === 'create'    && <CreateAccountPanel />}
+      {tab === 'companies' && <CompaniesPanel />}
     </div>
   )
 }
@@ -503,10 +505,307 @@ function CreateAccountPanel() {
           fontFamily:S.font, transition:'all 0.2s',
           boxShadow: loading ? 'none' : '0 4px 12px rgba(30,64,175,0.25)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
-        }}>
+        }}> 
           {loading ? <><Loader2 size={14} className="spin" /> Création en cours...</> : <><Rocket size={14} /> Valider & Créer l'entrepôt client</>}
         </button>
       </div>
+    </div>
+  )
+}
+
+
+/* ═══════════════════════════════════════════════════════════════ */
+/*  COMPANIES PANEL — Liste et gestion des comptes clients        */
+/* ═══════════════════════════════════════════════════════════════ */
+function CompaniesPanel() {
+  const [companies, setCompanies]   = useState([])
+  const [loading,   setLoading]     = useState(true)
+  const [error,     setError]       = useState('')
+  const [selected,  setSelected]    = useState(null)   // company detail
+  const [saving,    setSaving]      = useState(false)
+  const [newPwd,    setNewPwd]      = useState(null)
+  const [editWh,    setEditWh]      = useState(null)   // warehouse being edited
+  const [whForm,    setWhForm]      = useState({ name:'', geometry_json:'', routing_json:'' })
+  const [whError,   setWhError]     = useState('')
+  const [compForm,  setCompForm]    = useState({ name:'', email:'', phone:'' })
+  const [editComp,  setEditComp]    = useState(false)
+
+  useEffect(() => { load() }, [])
+
+  const load = async () => {
+    setLoading(true); setError('')
+    try {
+      const data = await api.adminCompanies.list()
+      setCompanies(data)
+    } catch(e) { setError(e.message) }
+    finally { setLoading(false) }
+  }
+
+  const openDetail = async (id) => {
+    setNewPwd(null); setEditWh(null); setEditComp(false)
+    try {
+      const data = await api.adminCompanies.get(id)
+      setSelected(data)
+      setCompForm({ name: data.name, email: data.email, phone: data.phone || '' })
+    } catch(e) { setError(e.message) }
+  }
+
+  const saveCompany = async () => {
+    setSaving(true)
+    try {
+      const updated = await api.adminCompanies.update(selected.id, compForm)
+      setSelected(s => ({ ...s, ...updated }))
+      setCompanies(cs => cs.map(c => c.id === updated.id ? { ...c, ...updated } : c))
+      setEditComp(false)
+    } catch(e) { setError(e.message) }
+    finally { setSaving(false) }
+  }
+
+  const doResetPassword = async () => {
+    if (!window.confirm('Réinitialiser le mot de passe de ce client ?')) return
+    setSaving(true)
+    try {
+      const res = await api.adminCompanies.resetPassword(selected.id)
+      setNewPwd(res.new_password)
+    } catch(e) { setError(e.message) }
+    finally { setSaving(false) }
+  }
+
+  const openWhEdit = (wh) => {
+    setEditWh(wh.id); setWhError('')
+    setWhForm({
+      name: wh.name,
+      geometry_json: wh.geometry_json ? JSON.stringify(wh.geometry_json, null, 2) : '',
+      routing_json:  wh.routing_json  ? JSON.stringify(wh.routing_json,  null, 2) : '',
+    })
+  }
+
+  const saveWarehouse = async (wh) => {
+    setWhError(''); setSaving(true)
+    try {
+      let geo = undefined, rtg = undefined
+      if (whForm.geometry_json.trim()) geo = JSON.parse(whForm.geometry_json)
+      if (whForm.routing_json.trim())  rtg = JSON.parse(whForm.routing_json)
+      const updated = await api.adminCompanies.updateWarehouse(selected.id, wh.id, {
+        name: whForm.name, geometry_json: geo, routing_json: rtg,
+      })
+      setSelected(s => ({ ...s, warehouses: s.warehouses.map(w => w.id === updated.id ? updated : w) }))
+      setEditWh(null)
+    } catch(e) { setWhError(e.message.includes('JSON') ? 'JSON invalide — vérifiez la syntaxe.' : e.message) }
+    finally { setSaving(false) }
+  }
+
+  const inputSt = { width:'100%', padding:'9px 12px', borderRadius:8, fontSize:12,
+    border:`1.5px solid ${S.divider}`, background:S.white, color:S.dark,
+    fontFamily:S.font, outline:'none', boxSizing:'border-box' }
+  const labelSt = { fontSize:9.5, color:S.dim, fontWeight:600, letterSpacing:'0.05em', display:'block', marginBottom:5 }
+
+  return (
+    <div style={{ display:'flex', gap:16 }}>
+
+      {/* ─── Liste des clients ─── */}
+      <div style={{ flex: selected ? '0 0 320px' : 1 }}>
+        {loading && <Loading text="Chargement des comptes..." />}
+        {error   && <ErrorBox message={error} />}
+
+        {!loading && companies.length === 0 && (
+          <EmptyState icon={<Users size={48} strokeWidth={1.5} color={S.dimmer} />}
+            text="Aucun compte client" sub="Créez votre premier compte dans l'onglet ci-dessus." />
+        )}
+
+        {companies.map(c => (
+          <div key={c.id} onClick={() => openDetail(c.id)} style={{
+            padding:'14px 16px', borderRadius:10, marginBottom:8, cursor:'pointer',
+            background: selected?.id === c.id ? '#EFF6FF' : S.white,
+            border:`1.5px solid ${selected?.id === c.id ? S.blue : S.divider}`,
+            transition:'all 0.15s', display:'flex', alignItems:'center', gap:12,
+          }}>
+            <div style={{ width:36, height:36, borderRadius:9, background:'linear-gradient(135deg,#1E40AF,#3B82F6)',
+              display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+              <Building size={18} color="#fff" />
+            </div>
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ fontSize:12, fontWeight:700, color:S.dark, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{c.name}</div>
+              <div style={{ fontSize:10, color:S.dim, marginTop:2 }}>{c.email}</div>
+            </div>
+            <div style={{ fontSize:9, color:S.dimmer }}>{new Date(c.created_at).toLocaleDateString('fr-FR')}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* ─── Panneau Détail ─── */}
+      {selected && (
+        <div style={{ flex:1, background:S.white, borderRadius:12, border:`1.5px solid ${S.divider}`,
+          padding:24, overflowY:'auto', maxHeight:'75vh' }}>
+
+          {/* Header client */}
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:20 }}>
+            <div>
+              <div style={{ fontSize:15, fontWeight:800, color:S.dark }}>{selected.name}</div>
+              <div style={{ fontSize:11, color:S.dim, marginTop:3 }}>{selected.email}</div>
+              <div style={{ fontSize:10, color:S.dimmer, marginTop:2 }}>
+                Créé le {new Date(selected.created_at).toLocaleDateString('fr-FR')}
+              </div>
+            </div>
+            <div style={{ display:'flex', gap:8 }}>
+              <button onClick={() => setEditComp(e => !e)} style={{
+                padding:'7px 12px', borderRadius:8, border:`1.5px solid ${S.blue}`,
+                background:'#EFF6FF', color:S.blue, fontSize:10, fontWeight:700,
+                cursor:'pointer', fontFamily:S.font, display:'flex', alignItems:'center', gap:5,
+              }}><Edit2 size={12} /> Modifier</button>
+              <button onClick={doResetPassword} disabled={saving} style={{
+                padding:'7px 12px', borderRadius:8, border:'1.5px solid #CA8A04',
+                background:'#FEFCE8', color:'#CA8A04', fontSize:10, fontWeight:700,
+                cursor:'pointer', fontFamily:S.font, display:'flex', alignItems:'center', gap:5,
+              }}><RefreshCw size={12} /> Réinit. MDP</button>
+              <button onClick={() => setSelected(null)} style={{
+                padding:'7px 10px', borderRadius:8, border:`1.5px solid ${S.divider}`,
+                background:S.bg, color:S.dim, cursor:'pointer', fontFamily:S.font,
+              }}><X size={14} /></button>
+            </div>
+          </div>
+
+          {/* Nouveau mot de passe affiché */}
+          {newPwd && (
+            <div style={{ padding:'12px 16px', borderRadius:9, background:'#FEFCE8',
+              border:'1.5px solid #FDE68A', marginBottom:16, fontSize:11 }}>
+              <div style={{ fontWeight:700, color:'#92400E', marginBottom:4 }}>Nouveau mot de passe généré :</div>
+              <div style={{ fontFamily:'monospace', fontSize:14, fontWeight:800, color:'#1C1917',
+                letterSpacing:'0.1em', background:'#FFF', padding:'6px 10px', borderRadius:6,
+                display:'inline-block' }}>{newPwd}</div>
+              <div style={{ fontSize:10, color:'#78350F', marginTop:6 }}>Communiquez ce mot de passe au client par un canal sécurisé.</div>
+            </div>
+          )}
+
+          {/* Formulaire édition client */}
+          {editComp && (
+            <div style={{ padding:16, borderRadius:10, background:'#F8FAFC',
+              border:`1px solid ${S.divider}`, marginBottom:20 }}>
+              <div style={{ fontSize:10, fontWeight:700, color:S.blue, marginBottom:12,
+                letterSpacing:'0.08em' }}>MODIFIER LES INFORMATIONS CLIENT</div>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
+                <div>
+                  <label style={labelSt}>NOM</label>
+                  <input value={compForm.name} onChange={e=>setCompForm(f=>({...f,name:e.target.value}))} style={inputSt}
+                    onFocus={e=>e.target.style.borderColor=S.blue} onBlur={e=>e.target.style.borderColor=S.divider} />
+                </div>
+                <div>
+                  <label style={labelSt}>EMAIL</label>
+                  <input value={compForm.email} onChange={e=>setCompForm(f=>({...f,email:e.target.value}))} style={inputSt}
+                    onFocus={e=>e.target.style.borderColor=S.blue} onBlur={e=>e.target.style.borderColor=S.divider} />
+                </div>
+              </div>
+              <div style={{ marginBottom:14 }}>
+                <label style={labelSt}>TÉLÉPHONE</label>
+                <input value={compForm.phone} onChange={e=>setCompForm(f=>({...f,phone:e.target.value}))} style={inputSt}
+                  onFocus={e=>e.target.style.borderColor=S.blue} onBlur={e=>e.target.style.borderColor=S.divider} />
+              </div>
+              <div style={{ display:'flex', gap:8 }}>
+                <button onClick={saveCompany} disabled={saving} style={{
+                  padding:'8px 16px', borderRadius:8, border:'none',
+                  background:'linear-gradient(135deg,#1E40AF,#3B82F6)', color:'#fff',
+                  fontSize:11, fontWeight:700, cursor:'pointer', fontFamily:S.font,
+                  display:'flex', alignItems:'center', gap:6,
+                }}><Save size={12} /> {saving ? 'Enregistrement...' : 'Enregistrer'}</button>
+                <button onClick={()=>setEditComp(false)} style={{
+                  padding:'8px 14px', borderRadius:8, border:`1.5px solid ${S.divider}`,
+                  background:S.white, color:S.dim, fontSize:11, cursor:'pointer', fontFamily:S.font,
+                }}>Annuler</button>
+              </div>
+            </div>
+          )}
+
+          {/* Entrepôts */}
+          <div style={{ fontSize:10, fontWeight:700, color:S.dim, letterSpacing:'0.08em', marginBottom:12 }}>
+            ENTREPÔTS ({selected.warehouses.length})
+          </div>
+
+          {selected.warehouses.length === 0 && (
+            <div style={{ fontSize:11, color:S.dimmer, padding:'20px 0', textAlign:'center' }}>
+              Aucun entrepôt configuré pour ce client.
+            </div>
+          )}
+
+          {selected.warehouses.map(wh => (
+            <div key={wh.id} style={{ borderRadius:10, border:`1.5px solid ${editWh===wh.id ? S.blue : S.divider}`,
+              marginBottom:12, overflow:'hidden', transition:'border-color 0.15s' }}>
+
+              {/* Header entrepôt */}
+              <div style={{ padding:'12px 16px', background: editWh===wh.id ? '#EFF6FF' : '#F8FAFC',
+                display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+                  <Boxes size={16} color={S.blue} />
+                  <div>
+                    <div style={{ fontSize:12, fontWeight:700, color:S.dark }}>{wh.name}</div>
+                    <div style={{ fontSize:9, color:S.dimmer, marginTop:1 }}>ID #{wh.id} · {new Date(wh.created_at).toLocaleDateString('fr-FR')}</div>
+                  </div>
+                </div>
+                <button onClick={() => editWh === wh.id ? setEditWh(null) : openWhEdit(wh)} style={{
+                  padding:'5px 12px', borderRadius:7, border:`1.5px solid ${editWh===wh.id ? S.blue : S.divider}`,
+                  background: editWh===wh.id ? '#EFF6FF' : S.white,
+                  color: editWh===wh.id ? S.blue : S.dim,
+                  fontSize:10, fontWeight:600, cursor:'pointer', fontFamily:S.font,
+                  display:'flex', alignItems:'center', gap:5,
+                }}>
+                  {editWh===wh.id ? <><X size={11}/> Fermer</> : <><Edit2 size={11}/> Modifier</>}
+                </button>
+              </div>
+
+              {/* Formulaire édition entrepôt */}
+              {editWh === wh.id && (
+                <div style={{ padding:16, borderTop:`1px solid ${S.divider}` }}>
+                  <div style={{ marginBottom:12 }}>
+                    <label style={labelSt}>NOM DE L'ENTREPÔT</label>
+                    <input value={whForm.name} onChange={e=>setWhForm(f=>({...f,name:e.target.value}))} style={inputSt}
+                      onFocus={e=>e.target.style.borderColor=S.blue} onBlur={e=>e.target.style.borderColor=S.divider} />
+                  </div>
+
+                  <div style={{ marginBottom:12 }}>
+                    <label style={labelSt}>GÉOMÉTRIE JSON (Heatmap / Slotting)</label>
+                    <textarea value={whForm.geometry_json}
+                      onChange={e=>setWhForm(f=>({...f,geometry_json:e.target.value}))}
+                      rows={6} style={{ ...inputSt, fontFamily:'monospace', fontSize:11, resize:'vertical' }}
+                      onFocus={e=>e.target.style.borderColor=S.blue}
+                      onBlur={e=>e.target.style.borderColor=S.divider}
+                      placeholder='{"vertical_racks": [...], "horizontal_racks": [...]}' />
+                  </div>
+
+                  <div style={{ marginBottom:14 }}>
+                    <label style={labelSt}>ROUTING JSON (Graphe CAO)</label>
+                    <textarea value={whForm.routing_json}
+                      onChange={e=>setWhForm(f=>({...f,routing_json:e.target.value}))}
+                      rows={6} style={{ ...inputSt, fontFamily:'monospace', fontSize:11, resize:'vertical' }}
+                      onFocus={e=>e.target.style.borderColor=S.blue}
+                      onBlur={e=>e.target.style.borderColor=S.divider}
+                      placeholder='{"nodes": [...], "edges": [...]}' />
+                  </div>
+
+                  {whError && (
+                    <div style={{ padding:'8px 12px', borderRadius:8, background:'#FEF2F2',
+                      border:'1px solid #FECACA', fontSize:10.5, color:'#DC2626',
+                      marginBottom:12, display:'flex', alignItems:'center', gap:6 }}>
+                      <AlertTriangle size={12} /> {whError}
+                    </div>
+                  )}
+
+                  <div style={{ display:'flex', gap:8 }}>
+                    <button onClick={() => saveWarehouse(wh)} disabled={saving} style={{
+                      padding:'8px 16px', borderRadius:8, border:'none',
+                      background:'linear-gradient(135deg,#1E40AF,#3B82F6)', color:'#fff',
+                      fontSize:11, fontWeight:700, cursor:'pointer', fontFamily:S.font,
+                      display:'flex', alignItems:'center', gap:6,
+                    }}><Save size={12} /> {saving ? 'Enregistrement...' : 'Enregistrer'}</button>
+                    <button onClick={()=>setEditWh(null)} style={{
+                      padding:'8px 14px', borderRadius:8, border:`1.5px solid ${S.divider}`,
+                      background:S.white, color:S.dim, fontSize:11, cursor:'pointer', fontFamily:S.font,
+                    }}>Annuler</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

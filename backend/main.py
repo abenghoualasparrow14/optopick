@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
-from routers import auth, warehouses, upload, heatmap, slotting, routing, access_requests
+from routers import auth, warehouses, upload, heatmap, slotting, routing, access_requests, admin_companies
 
 # Créer toutes les tables au démarrage
 Base.metadata.create_all(bind=engine)
@@ -49,6 +49,7 @@ app.include_router(heatmap.router)
 app.include_router(slotting.router)
 app.include_router(routing.router)
 app.include_router(access_requests.router)
+app.include_router(admin_companies.router)
 
 @app.get("/")
 def root():

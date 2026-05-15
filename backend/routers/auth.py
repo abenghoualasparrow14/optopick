@@ -1,26 +1,79 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-from database import get_db
-from models import Company, Warehouse
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from database import get_db
 from models import Company, Warehouse
 import schemas
-from services.auth import hash_password, verify_password, create_token
+from services.auth import hash_password, verify_password, create_token, create_refresh_token, decode_token
 from dependencies import get_current_company
 import json
+import time
+from collections import defaultdict
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
+# ── Rate limiting (in-memory) ──────────────────────────────────────────────────
+_login_attempts: dict = defaultdict(list)   # ip -> [timestamp, ...]
+MAX_ATTEMPTS   = 5     # tentatives max
+WINDOW_SECONDS = 300   # fenêtre de 5 minutes
+LOCKOUT_SECONDS = 600  # blocage de 10 minutes
+
+def _check_rate_limit(ip: str):
+    now = time.time()
+    attempts = _login_attempts[ip]
+    # Nettoyer les anciennes tentatives hors de la fenêtre
+    _login_attempts[ip] = [t for t in attempts if now - t < LOCKOUT_SECONDS]
+    recent = [t for t in _login_attempts[ip] if now - t < WINDOW_SECONDS]
+    if len(recent) >= MAX_ATTEMPTS:
+        wait = int(LOCKOUT_SECONDS - (now - _login_attempts[ip][0]))
+        raise HTTPException(
+            status_code=429,
+            detail=f"Trop de tentatives échouées. Réessayez dans {wait} secondes."
+        )
+
+def _record_attempt(ip: str):
+    _login_attempts[ip].append(time.time())
+
+def _clear_attempts(ip: str):
+    _login_attempts[ip] = []
+# ──────────────────────────────────────────────────────────────────────────────
+
 
 @router.post("/login", response_model=schemas.Token)
-def login(data: schemas.CompanyLogin, db: Session = Depends(get_db)):
+def login(data: schemas.CompanyLogin, request: Request, db: Session = Depends(get_db)):
+    ip = request.client.host
+    _check_rate_limit(ip)
+
     company = db.query(Company).filter(Company.email == data.email).first()
     if not company or not verify_password(data.password, company.password):
+        _record_attempt(ip)
         raise HTTPException(status_code=401, detail="Email ou mot de passe incorrect.")
-    token = create_token({"company_id": company.id, "name": company.name, "is_admin": bool(company.is_admin)})
-    return {"access_token": token}
+
+    _clear_attempts(ip)  # Connexion réussie → reset du compteur
+    payload = {"company_id": company.id, "name": company.name, "is_admin": bool(company.is_admin)}
+    access_token   = create_token(payload)
+    refresh_token  = create_refresh_token(payload)
+    return {"access_token": access_token, "refresh_token": refresh_token}
+
+
+@router.post("/refresh", response_model=schemas.Token)
+def refresh_token(data: schemas.RefreshTokenRequest):
+    """Renouvelle le access_token à partir d'un refresh_token valide."""
+    try:
+        payload = decode_token(data.refresh_token)
+        if payload.get("type") != "refresh":
+            raise HTTPException(status_code=401, detail="Token invalide.")
+    except Exception:
+        raise HTTPException(status_code=401, detail="Refresh token expiré ou invalide.")
+
+    new_payload = {
+        "company_id": payload["company_id"],
+        "name":       payload["name"],
+        "is_admin":   payload["is_admin"],
+    }
+    return {
+        "access_token":  create_token(new_payload),
+        "refresh_token": create_refresh_token(new_payload),
+    }
 
 
 @router.post("/admin/create-account")
